@@ -1,9 +1,4 @@
-﻿Education (At least bachelor's degree) for Virginia by County
-Population Ages 25+
-"All Races (includes Hispanic/Latino), Both Sexes, 2019-2023"
-Sorted by Value
-
-County,FIPS,Value (Percent),People (Education: At Least Bachelor's Degree),Rank within US (of 3143 counties)
+﻿County,FIPS,Value (Percent),People (Education: At Least Bachelor's Degree),Rank within US (of 3143 counties)
 "United States",00000,35.0,79954302,"N/A"
 "Virginia",51000,41.5,2471630,"8 of 52"
 "Covington City",51580,9.6,367,"3,106"
@@ -139,11 +134,3 @@ County,FIPS,Value (Percent),People (Education: At Least Bachelor's Degree),Rank 
 "Alexandria City",51510,65.8,78211,"4"
 "Arlington County",51013,77.1,133574,"2"
 "Falls Church City",51610,79.7,7849,"1"
-
-Suggested Citation:
-HDPulse: An Ecosystem of Minority Health and Health Disparities Resources. National Institute on Minority Health and Health Disparities. Created 11/12/2025. Available from https://hdpulse.nimhd.nih.gov
-
-Notes:
-"NA: Data not available [http://hdpulse.nimhd.nih.gov/data/datanotavailable.html] for this combination of geography, cancer site, age, and race/ethnicity."
-Source: Demographic data provided by the Census Bureau (http://www.census.gov/) & the American Community Survey (http://www.census.gov/acs/www/).
-"For more information about Education (At least bachelor's degree), see the dictionary at http://hdpulse.nimhd.nih.gov/dictionary.php#education."
