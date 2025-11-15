@@ -43,7 +43,6 @@ VA,51083,Halifax County, 0.51 , 0.15
 VA,51085,Hanover County, 0.88 , 0.61 
 VA,51087,Henrico County, 0.98 , 0.67 
 VA,51089,Henry County, 0.97 , 0.27 
-VA,51091,Highland County, -   , 0.08 
 VA,51093,Isle of Wight County, 0.85 , 0.42 
 VA,51095,James City County, 0.94 , 0.69 
 VA,51097,King and Queen County, 0.17 , 0.06 
@@ -85,7 +84,6 @@ VA,51173,Smyth County, 0.94 , 0.25
 VA,51175,Southampton County, 0.48 , 0.11 
 VA,51177,Spotsylvania County, 0.98 , 0.78 
 VA,51179,Stafford County, 0.99 , 0.90 
-VA,51181,Surry County, -   , 0.05 
 VA,51183,Sussex County, 0.34 , 0.13 
 VA,51185,Tazewell County, 0.98 , 0.25 
 VA,51187,Warren County, 0.91 , 0.63 
@@ -95,16 +93,12 @@ VA,51195,Wise County, 0.95 , 0.25
 VA,51197,Wythe County, 0.89 , 0.11 
 VA,51199,York County, 0.98 , 0.76 
 VA,51510,Alexandria city, 0.98 , 0.56 
-VA,51515,Bedford city, -   , -   
 VA,51520,Bristol city, 1.00 , 0.56 
 VA,51530,Buena Vista city, 0.98 , 0.32 
 VA,51540,Charlottesville city, 0.98 , 0.62 
 VA,51550,Chesapeake city, 0.98 , 0.75 
 VA,51570,Colonial Heights city, 0.98 , 0.49 
-VA,51580,Covington city, 1.00 , -   
 VA,51590,Danville city, 0.99 , 0.37 
-VA,51595,Emporia city, 0.97 , -   
-VA,51600,Fairfax city, 0.97 , -   
 VA,51610,Falls Church city, 0.99 , 1.00 
 VA,51620,Franklin city, 1.00 , 0.27 
 VA,51630,Fredericksburg city, 0.93 , 0.75 
@@ -112,11 +106,8 @@ VA,51640,Galax city, 0.96 , 0.26
 VA,51650,Hampton city, 0.98 , 0.55 
 VA,51660,Harrisonburg city, 0.92 , 0.58 
 VA,51670,Hopewell city, 0.98 , 0.38 
-VA,51678,Lexington city, 0.98 , -   
 VA,51680,Lynchburg city, 0.94 , 0.34 
 VA,51683,Manassas city, 0.96 , 1.00 
-VA,51685,Manassas Park city, 0.99 , -   
-VA,51690,Martinsville city, 0.99 , -   
 VA,51700,Newport News city, 0.98 , 0.58 
 VA,51710,Norfolk city, 0.96 , 0.55 
 VA,51720,Norton city, 0.97 , 0.43 
@@ -131,5 +122,4 @@ VA,51790,Staunton city, 0.98 , 0.54
 VA,51800,Suffolk city, 0.95 , 0.51 
 VA,51810,Virginia Beach city, 0.98 , 0.70 
 VA,51820,Waynesboro city, 0.98 , 0.61 
-VA,51830,Williamsburg city, 0.71 , 1.00 
 VA,51840,Winchester city, 0.99 , 0.99 
