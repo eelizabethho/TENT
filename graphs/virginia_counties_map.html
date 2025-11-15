@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virginia Counties Map: Richest vs Poorest</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        #map {
+            width: 100%;
+            height: 700px;
+            margin-bottom: 30px;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        .info-box {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Virginia Counties Geographic Map</h1>
+        <p class="subtitle">Top 5 Richest vs Top 5 Poorest Counties (2020)</p>
+        
+        <div class="info-box">
+            <p><strong>Map Legend:</strong></p>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(33, 150, 243, 0.8);"></div>
+                    <span>Richest 5 Counties</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(255, 152, 0, 0.8);"></div>
+                    <span>Poorest 5 Counties</span>
+                </div>
+            </div>
+            <p style="margin-top: 15px;"><em>County names and data are displayed directly on the map for easy viewing.</em></p>
+        </div>
+        
+        <div id="map"></div>
+    </div>
+
+    <script>
+        // County data with approximate coordinates (latitude, longitude) for Virginia counties
+        const countyLocations = {
+            // Top 5 Richest
+            "Loudoun County": { lat: 39.0903, lon: -77.6357, income: 147111, usage: 0.883, education: 64.0, category: "Richest" },
+            "Falls Church city": { lat: 38.8823, lon: -77.1711, income: 146922, usage: 1.0, education: 79.7, category: "Richest" },
+            "Arlington County": { lat: 38.8816, lon: -77.0910, income: 122604, usage: 0.776, education: 77.1, category: "Richest" },
+            "Fairfax County": { lat: 38.8462, lon: -77.3064, income: 109708, usage: 0.884, education: 64.3, category: "Richest" },
+            "Stafford County": { lat: 38.4220, lon: -77.4083, income: 112247, usage: 0.885, education: 43.3, category: "Richest" },
+            
+            // Top 5 Poorest
+            "Dickenson County": { lat: 37.1258, lon: -82.3500, income: 30116, usage: 0.257, education: 10.7, category: "Poorest" },
+            "Norton city": { lat: 36.9334, lon: -82.6290, income: 30518, usage: 0.409, education: 16.6, category: "Poorest" },
+            "Buchanan County": { lat: 37.2665, lon: -82.0354, income: 34302, usage: 0.234, education: 10.8, category: "Poorest" },
+            "Radford city": { lat: 37.1318, lon: -80.5764, income: 34576, usage: 0.203, education: 39.8, category: "Poorest" },
+            "Lunenburg County": { lat: 36.9460, lon: -78.2406, income: 45884, usage: 0.124, education: 11.2, category: "Poorest" }
+        };
+
+        function formatCurrency(value) {
+            return '$' + value.toLocaleString('en-US');
+        }
+
+        function formatPercent(value) {
+            return value.toFixed(1) + '%';
+        }
+
+        function createMap() {
+            const richest = Object.entries(countyLocations)
+                .filter(([name, data]) => data.category === "Richest");
+            
+            const poorest = Object.entries(countyLocations)
+                .filter(([name, data]) => data.category === "Poorest");
+
+
+            // Richest counties trace
+            const trace1 = {
+                type: 'scattermapbox',
+                mode: 'markers+text',
+                name: 'Richest 5 Counties',
+                lat: richest.map(([name, data]) => data.lat),
+                lon: richest.map(([name, data]) => data.lon),
+                text: richest.map(([name, data]) => {
+                    const shortName = name.replace(' County', '').replace(' city', '');
+                    return `${shortName}<br>$${data.income.toLocaleString()}<br>Usage: ${formatPercent(data.usage * 100)}<br>Edu: ${formatPercent(data.education)}`;
+                }),
+                textposition: 'top center',
+                textfont: {
+                    size: 11,
+                    color: 'rgba(33, 150, 243, 1)'
+                },
+                marker: {
+                    size: 18,
+                    color: 'rgba(33, 150, 243, 0.8)',
+                    line: {
+                        color: 'rgba(33, 150, 243, 1)',
+                        width: 2
+                    }
+                },
+                hoverinfo: 'skip'
+            };
+
+            // Poorest counties trace
+            const trace2 = {
+                type: 'scattermapbox',
+                mode: 'markers+text',
+                name: 'Poorest 5 Counties',
+                lat: poorest.map(([name, data]) => data.lat),
+                lon: poorest.map(([name, data]) => data.lon),
+                text: poorest.map(([name, data]) => {
+                    const shortName = name.replace(' County', '').replace(' city', '');
+                    return `${shortName}<br>$${data.income.toLocaleString()}<br>Usage: ${formatPercent(data.usage * 100)}<br>Edu: ${formatPercent(data.education)}`;
+                }),
+                textposition: 'top center',
+                textfont: {
+                    size: 11,
+                    color: 'rgba(255, 152, 0, 1)'
+                },
+                marker: {
+                    size: 18,
+                    color: 'rgba(255, 152, 0, 0.8)',
+                    line: {
+                        color: 'rgba(255, 152, 0, 1)',
+                        width: 2
+                    }
+                },
+                hoverinfo: 'skip'
+            };
+
+            // Calculate center of Virginia (approximate)
+            const centerLat = 37.5;
+            const centerLon = -78.5;
+
+            const layout = {
+                autosize: true,
+                hovermode: false,
+                mapbox: {
+                    style: 'open-street-map',
+                    center: {
+                        lat: centerLat,
+                        lon: centerLon
+                    },
+                    zoom: 6.5
+                },
+                margin: {
+                    l: 0,
+                    r: 0,
+                    t: 0,
+                    b: 0
+                },
+                legend: {
+                    x: 0.5,
+                    y: -0.1,
+                    xanchor: 'center',
+                    orientation: 'h'
+                },
+                dragmode: false
+            };
+
+            const config = {
+                displayModeBar: false,
+                responsive: true,
+                scrollZoom: false,
+                doubleClick: false
+            };
+
+            Plotly.newPlot('map', [trace1, trace2], layout, config);
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            createMap();
+        });
+    </script>
+</body>
+</html>
+

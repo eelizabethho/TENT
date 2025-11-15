@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income, Broadband Usage & Education: Richest vs Poorest Counties</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .chart-container {
+            margin-bottom: 40px;
+        }
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        @media (max-width: 1200px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        #incomeChart {
+            width: 100%;
+            height: 500px;
+        }
+        #usageChart {
+            width: 100%;
+            height: 500px;
+        }
+        #educationChart {
+            width: 100%;
+            height: 500px;
+            margin-bottom: 30px;
+        }
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1em;
+        }
+        .stat-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        .comparison-table {
+            width: 100%;
+            margin-top: 30px;
+            border-collapse: collapse;
+        }
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .comparison-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .comparison-table tr:hover {
+            background: #f5f5f5;
+        }
+        .richest {
+            background-color: #e3f2fd;
+        }
+        .poorest {
+            background-color: #fff3e0;
+        }
+        .explanation-box {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+        .explanation-box h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Income, Broadband Usage & Education Analysis</h1>
+        <p class="subtitle">Top 5 Richest vs Top 5 Poorest Counties (2020)</p>
+        
+        <div class="explanation-box">
+            <h3>Metrics Displayed:</h3>
+            <p><strong>Income:</strong> Actual median household income in dollars (shown in separate chart on left)</p>
+            <p><strong>Broadband Usage:</strong> Percentage (0-100%) showing actual % of population using broadband (shown in separate chart on right)</p>
+            <p><strong>Education:</strong> Percentage (0-100%) showing % of population with bachelor's degree or higher</p>
+            <p><em>Note: Only counties with complete data (income, usage, and education) are included. Charts are displayed side-by-side for better clarity.</em></p>
+        </div>
+        
+        <div class="chart-container">
+            <h2>Income & Broadband Usage Comparison</h2>
+            <div class="charts-row">
+                <div>
+                    <h3 style="text-align: center; margin-bottom: 10px;">Median Household Income</h3>
+                    <div id="incomeChart"></div>
+                </div>
+                <div>
+                    <h3 style="text-align: center; margin-bottom: 10px;">Broadband Usage</h3>
+                    <div id="usageChart"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h2>Education Attainment (Bachelor's Degree or Higher)</h2>
+            <div id="educationChart"></div>
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3>Avg Income - Richest 5</h3>
+                <div class="value" id="avgIncomeRichest">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Avg Income - Poorest 5</h3>
+                <div class="value" id="avgIncomePoorest">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Avg Usage - Richest 5</h3>
+                <div class="value" id="avgUsageRichest">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Avg Usage - Poorest 5</h3>
+                <div class="value" id="avgUsagePoorest">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Avg Education - Richest 5</h3>
+                <div class="value" id="avgEducationRichest">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Avg Education - Poorest 5</h3>
+                <div class="value" id="avgEducationPoorest">-</div>
+            </div>
+        </div>
+        
+        <h2 style="margin-top: 40px;">Detailed County Comparison</h2>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>County Name</th>
+                    <th>Income</th>
+                    <th>Usage (%)</th>
+                    <th>Education (%)</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // County data with income, usage, and education
+        // Only including counties with all three data points available
+        const countyData = {
+            // Top 5 Richest
+            "Loudoun County": { income: 147111, usage: 0.883, education: 64.0, category: "Richest" },
+            "Falls Church city": { income: 146922, usage: 1.0, education: 79.7, category: "Richest" },
+            "Arlington County": { income: 122604, usage: 0.776, education: 77.1, category: "Richest" },
+            "Fairfax County": { income: 109708, usage: 0.884, education: 64.3, category: "Richest" },
+            "Stafford County": { income: 112247, usage: 0.885, education: 43.3, category: "Richest" },
+            
+            // Top 5 Poorest (with complete data)
+            "Dickenson County": { income: 30116, usage: 0.257, education: 10.7, category: "Poorest" },
+            "Norton city": { income: 30518, usage: 0.409, education: 16.6, category: "Poorest" },
+            "Buchanan County": { income: 34302, usage: 0.234, education: 10.8, category: "Poorest" },
+            "Radford city": { income: 34576, usage: 0.203, education: 39.8, category: "Poorest" },
+            "Lunenburg County": { income: 45884, usage: 0.124, education: 11.2, category: "Poorest" }
+        };
+
+        // Calculate normalization ranges
+        const allIncomes = Object.values(countyData).map(d => d.income);
+        const minIncome = Math.min(...allIncomes);
+        const maxIncome = Math.max(...allIncomes);
+        const incomeRange = maxIncome - minIncome;
+
+        function normalizeIncome(income) {
+            return ((income - minIncome) / incomeRange) * 100;
+        }
+
+        function formatCurrency(value) {
+            return '$' + value.toLocaleString('en-US');
+        }
+
+        function formatPercent(value) {
+            return value.toFixed(1) + '%';
+        }
+
+        function calculateStats() {
+            const richest = Object.entries(countyData)
+                .filter(([name, data]) => data.category === "Richest")
+                .map(([name, data]) => data);
+            
+            const poorest = Object.entries(countyData)
+                .filter(([name, data]) => data.category === "Poorest")
+                .map(([name, data]) => data);
+
+            const avgIncomeRichest = richest.reduce((sum, d) => sum + d.income, 0) / richest.length;
+            const avgIncomePoorest = poorest.reduce((sum, d) => sum + d.income, 0) / poorest.length;
+            const avgUsageRichest = richest.reduce((sum, d) => sum + (d.usage * 100), 0) / richest.length;
+            const avgUsagePoorest = poorest.reduce((sum, d) => sum + (d.usage * 100), 0) / poorest.length;
+            const avgEducationRichest = richest.reduce((sum, d) => sum + d.education, 0) / richest.length;
+            const avgEducationPoorest = poorest.reduce((sum, d) => sum + d.education, 0) / poorest.length;
+
+            document.getElementById('avgIncomeRichest').textContent = formatCurrency(avgIncomeRichest);
+            document.getElementById('avgIncomePoorest').textContent = formatCurrency(avgIncomePoorest);
+            document.getElementById('avgUsageRichest').textContent = formatPercent(avgUsageRichest);
+            document.getElementById('avgUsagePoorest').textContent = formatPercent(avgUsagePoorest);
+            document.getElementById('avgEducationRichest').textContent = formatPercent(avgEducationRichest);
+            document.getElementById('avgEducationPoorest').textContent = formatPercent(avgEducationPoorest);
+        }
+
+        // Get consistent county order (sorted by income) for both charts
+        function getCountyOrder() {
+            const richest = Object.entries(countyData)
+                .filter(([name, data]) => data.category === "Richest")
+                .sort((a, b) => b[1].income - a[1].income);
+            
+            const poorest = Object.entries(countyData)
+                .filter(([name, data]) => data.category === "Poorest")
+                .sort((a, b) => a[1].income - b[1].income);
+
+            return {
+                counties: [...richest.map(([name]) => name.replace(' County', '').replace(' city', '')), 
+                          ...poorest.map(([name]) => name.replace(' County', '').replace(' city', ''))],
+                dataOrder: [...richest, ...poorest]
+            };
+        }
+
+        function createIncomeChart() {
+            const { counties, dataOrder } = getCountyOrder();
+            
+            const income = dataOrder.map(([name, data]) => data.income);
+
+            const trace = {
+                x: counties,
+                y: income,
+                type: 'bar',
+                marker: {
+                    color: Array(5).fill('rgba(33, 150, 243, 0.7)').concat(Array(5).fill('rgba(255, 152, 0, 0.7)')),
+                    line: {
+                        color: Array(5).fill('rgba(33, 150, 243, 1)').concat(Array(5).fill('rgba(255, 152, 0, 1)')),
+                        width: 2
+                    }
+                },
+                text: income.map(v => formatCurrency(v)),
+                textposition: 'outside',
+                hovertemplate: '<b>%{x}</b><br>Income: %{text}<extra></extra>'
+            };
+
+            const layout = {
+                xaxis: {
+                    title: 'County',
+                    tickangle: -45,
+                    tickfont: { size: 10 },
+                    categoryorder: 'array',
+                    categoryarray: counties
+                },
+                yaxis: {
+                    title: 'Median Household Income ($)',
+                    tickformat: '$,.0f'
+                },
+                hovermode: 'closest',
+                margin: {
+                    b: 150,
+                    t: 20,
+                    l: 80,
+                    r: 20
+                },
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)'
+            };
+
+            Plotly.newPlot('incomeChart', [trace], layout, {responsive: true});
+        }
+
+        function createUsageChart() {
+            const { counties, dataOrder } = getCountyOrder();
+            
+            const usage = dataOrder.map(([name, data]) => data.usage * 100);
+
+            const trace = {
+                x: counties,
+                y: usage,
+                type: 'bar',
+                marker: {
+                    color: Array(5).fill('rgba(76, 175, 80, 0.7)').concat(Array(5).fill('rgba(244, 67, 54, 0.7)')),
+                    line: {
+                        color: Array(5).fill('rgba(76, 175, 80, 1)').concat(Array(5).fill('rgba(244, 67, 54, 1)')),
+                        width: 2
+                    }
+                },
+                text: usage.map(v => formatPercent(v)),
+                textposition: 'outside',
+                hovertemplate: '<b>%{x}</b><br>Usage: %{text}<extra></extra>'
+            };
+
+            const layout = {
+                xaxis: {
+                    title: 'County',
+                    tickangle: -45,
+                    tickfont: { size: 10 },
+                    categoryorder: 'array',
+                    categoryarray: counties
+                },
+                yaxis: {
+                    title: 'Broadband Usage (%)',
+                    range: [0, 100],
+                    tickformat: '.0f'
+                },
+                hovermode: 'closest',
+                margin: {
+                    b: 150,
+                    t: 20,
+                    l: 80,
+                    r: 20
+                },
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)'
+            };
+
+            Plotly.newPlot('usageChart', [trace], layout, {responsive: true});
+        }
+
+        function createEducationChart() {
+            const { counties, dataOrder } = getCountyOrder();
+            
+            const education = dataOrder.map(([name, data]) => data.education);
+
+            const trace = {
+                x: counties,
+                y: education,
+                type: 'bar',
+                marker: {
+                    color: Array(5).fill('rgba(156, 39, 176, 0.7)').concat(Array(5).fill('rgba(255, 87, 34, 0.7)')),
+                    line: {
+                        color: Array(5).fill('rgba(156, 39, 176, 1)').concat(Array(5).fill('rgba(255, 87, 34, 1)')),
+                        width: 2
+                    }
+                },
+                text: education.map(v => formatPercent(v)),
+                textposition: 'outside',
+                hovertemplate: '<b>%{x}</b><br>Education: %{text}<extra></extra>'
+            };
+
+            const layout = {
+                title: {
+                    text: 'Education Attainment (% with Bachelor\'s Degree or Higher)',
+                    font: { size: 20 }
+                },
+                xaxis: {
+                    title: 'County',
+                    tickangle: -45,
+                    tickfont: { size: 10 },
+                    categoryorder: 'array',
+                    categoryarray: counties
+                },
+                yaxis: {
+                    title: 'Percentage (%)',
+                    range: [0, 100],
+                    tickformat: '.0f'
+                },
+                hovermode: 'closest',
+                margin: {
+                    b: 150,
+                    t: 80
+                },
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)'
+            };
+
+            Plotly.newPlot('educationChart', [trace], layout, {responsive: true});
+        }
+
+        function createTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            // Sort by category and income
+            const sorted = Object.entries(countyData).sort((a, b) => {
+                if (a[1].category !== b[1].category) {
+                    return a[1].category === "Richest" ? -1 : 1;
+                }
+                return b[1].income - a[1].income;
+            });
+
+            sorted.forEach(([name, data]) => {
+                const row = document.createElement('tr');
+                row.className = data.category === "Richest" ? 'richest' : 'poorest';
+                
+                row.innerHTML = `
+                    <td>${data.category}</td>
+                    <td><strong>${name}</strong></td>
+                    <td>${formatCurrency(data.income)}</td>
+                    <td>${formatPercent(data.usage * 100)}</td>
+                    <td>${formatPercent(data.education)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            calculateStats();
+            createIncomeChart();
+            createUsageChart();
+            createEducationChart();
+            createTable();
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virginia Broadband Availability Comparison: 2019 vs 2020</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        #chart {
+            width: 100%;
+            height: 800px;
+            margin-bottom: 30px;
+        }
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+        }
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .controls select {
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            border: 2px solid #667eea;
+            background: white;
+            cursor: pointer;
+        }
+        .percentage-table {
+            width: 100%;
+            margin-top: 30px;
+            border-collapse: collapse;
+            max-height: 400px;
+            overflow-y: auto;
+            display: block;
+        }
+        .percentage-table thead {
+            background: #667eea;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        .percentage-table th,
+        .percentage-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .percentage-table tr:hover {
+            background: #f5f5f5;
+        }
+        .increase {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .decrease {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .no-change {
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Virginia Broadband Availability Comparison</h1>
+        <p class="subtitle">2019 vs 2020 - Percentage Change Analysis</p>
+        
+        <div class="controls">
+            <select id="sortSelect" onchange="updateChart()">
+                <option value="name">Sort by County Name</option>
+                <option value="change">Sort by Percentage Change</option>
+                <option value="value2020">Sort by 2020 Value</option>
+            </select>
+        </div>
+        
+        <div id="chart"></div>
+        
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3>Average 2019 Availability</h3>
+                <div class="value" id="avg2019">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Average 2020 Availability</h3>
+                <div class="value" id="avg2020">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Overall Change</h3>
+                <div class="value" id="overallChange">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Counties Improved</h3>
+                <div class="value" id="improved">-</div>
+            </div>
+        </div>
+        
+        <h2 style="margin-top: 40px;">Percentage Change by County</h2>
+        <div style="overflow-x: auto;">
+            <table class="percentage-table" id="percentageTable">
+                <thead>
+                    <tr>
+                        <th>County Name</th>
+                        <th>2019 Availability</th>
+                        <th>2020 Availability</th>
+                        <th>Change</th>
+                        <th>Percentage Change</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Embedded data
+        const csvData2019 = [{"ST": "VA", "COUNTY ID": "51001", "COUNTY NAME": "Accomack County", "BROADBAND AVAILABILITY PER FCC": " 0.58 ", "BROADBAND USAGE": " 0.10 "}, {"ST": "VA", "COUNTY ID": "51003", "COUNTY NAME": "Albemarle County", "BROADBAND AVAILABILITY PER FCC": " 0.89 ", "BROADBAND USAGE": " 0.51 "}, {"ST": "VA", "COUNTY ID": "51005", "COUNTY NAME": "Alleghany County", "BROADBAND AVAILABILITY PER FCC": " 0.92 ", "BROADBAND USAGE": " 0.27 "}, {"ST": "VA", "COUNTY ID": "51007", "COUNTY NAME": "Amelia County", "BROADBAND AVAILABILITY PER FCC": " 0.65 ", "BROADBAND USAGE": " 0.07 "}, {"ST": "VA", "COUNTY ID": "51009", "COUNTY NAME": "Amherst County", "BROADBAND AVAILABILITY PER FCC": " 0.94 ", "BROADBAND USAGE": " 0.31 "}, {"ST": "VA", "COUNTY ID": "51011", "COUNTY NAME": "Appomattox County", "BROADBAND AVAILABILITY PER FCC": " 0.71 ", "BROADBAND USAGE": " 0.18 "}, {"ST": "VA", "COUNTY ID": "51013", "COUNTY NAME": "Arlington County", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.70 "}, {"ST": "VA", "COUNTY ID": "51015", "COUNTY NAME": "Augusta County", "BROADBAND AVAILABILITY PER FCC": " 0.80 ", "BROADBAND USAGE": " 0.32 "}, {"ST": "VA", "COUNTY ID": "51017", "COUNTY NAME": "Bath County", "BROADBAND AVAILABILITY PER FCC": " 0.62 ", "BROADBAND USAGE": " 0.10 "}, {"ST": "VA", "COUNTY ID": "51019", "COUNTY NAME": "Bedford County", "BROADBAND AVAILABILITY PER FCC": " 0.68 ", "BROADBAND USAGE": " 0.24 "}, {"ST": "VA", "COUNTY ID": "51021", "COUNTY NAME": "Bland County", "BROADBAND AVAILABILITY PER FCC": " 1.00 ", "BROADBAND USAGE": " 0.05 "}, {"ST": "VA", "COUNTY ID": "51023", "COUNTY NAME": "Botetourt County", "BROADBAND AVAILABILITY PER FCC": " 0.77 ", "BROADBAND USAGE": " 0.37 "}, {"ST": "VA", "COUNTY ID": "51025", "COUNTY NAME": "Brunswick County", "BROADBAND AVAILABILITY PER FCC": " 0.22 ", "BROADBAND USAGE": " 0.04 "}, {"ST": "VA", "COUNTY ID": "51027", "COUNTY NAME": "Buchanan County", "BROADBAND AVAILABILITY PER FCC": " 1.00 ", "BROADBAND USAGE": " 0.18 "}, {"ST": "VA", "COUNTY ID": "51029", "COUNTY NAME": "Buckingham County", "BROADBAND AVAILABILITY PER FCC": " 0.42 ", "BROADBAND USAGE": " 0.07 "}, {"ST": "VA", "COUNTY ID": "51031", "COUNTY NAME": "Campbell County", "BROADBAND AVAILABILITY PER FCC": " 0.81 ", "BROADBAND USAGE": " 0.13 "}, {"ST": "VA", "COUNTY ID": "51033", "COUNTY NAME": "Caroline County", "BROADBAND AVAILABILITY PER FCC": " 0.66 ", "BROADBAND USAGE": " 0.38 "}, {"ST": "VA", "COUNTY ID": "51035", "COUNTY NAME": "Carroll County", "BROADBAND AVAILABILITY PER FCC": " 0.63 ", "BROADBAND USAGE": " 0.08 "}, {"ST": "VA", "COUNTY ID": "51036", "COUNTY NAME": "Charles City County", "BROADBAND AVAILABILITY PER FCC": " 1.00 ", "BROADBAND USAGE": " 0.06 "}, {"ST": "VA", "COUNTY ID": "51037", "COUNTY NAME": "Charlotte County", "BROADBAND AVAILABILITY PER FCC": " 0.29 ", "BROADBAND USAGE": " 0.05 "}, {"ST": "VA", "COUNTY ID": "51041", "COUNTY NAME": "Chesterfield County", "BROADBAND AVAILABILITY PER FCC": " 0.97 ", "BROADBAND USAGE": " 0.83 "}, {"ST": "VA", "COUNTY ID": "51043", "COUNTY NAME": "Clarke County", "BROADBAND AVAILABILITY PER FCC": " 0.64 ", "BROADBAND USAGE": " 0.26 "}, {"ST": "VA", "COUNTY ID": "51045", "COUNTY NAME": "Craig County", "BROADBAND AVAILABILITY PER FCC": " 0.69 ", "BROADBAND USAGE": " 0.04 "}, {"ST": "VA", "COUNTY ID": "51047", "COUNTY NAME": "Culpeper County", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.55 "}, {"ST": "VA", "COUNTY ID": "51049", "COUNTY NAME": "Cumberland County", "BROADBAND AVAILABILITY PER FCC": " 0.20 ", "BROADBAND USAGE": " 0.02 "}, {"ST": "VA", "COUNTY ID": "51051", "COUNTY NAME": "Dickenson County", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.18 "}, {"ST": "VA", "COUNTY ID": "51053", "COUNTY NAME": "Dinwiddie County", "BROADBAND AVAILABILITY PER FCC": " 0.54 ", "BROADBAND USAGE": " 0.06 "}, {"ST": "VA", "COUNTY ID": "51057", "COUNTY NAME": "Essex County", "BROADBAND AVAILABILITY PER FCC": " 0.79 ", "BROADBAND USAGE": " 0.28 "}, {"ST": "VA", "COUNTY ID": "51059", "COUNTY NAME": "Fairfax County", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.92 "}, {"ST": "VA", "COUNTY ID": "51061", "COUNTY NAME": "Fauquier County", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.58 "}, {"ST": "VA", "COUNTY ID": "51063", "COUNTY NAME": "Floyd County", "BROADBAND AVAILABILITY PER FCC": " 0.50 ", "BROADBAND USAGE": " 0.11 "}, {"ST": "VA", "COUNTY ID": "51065", "COUNTY NAME": "Fluvanna County", "BROADBAND AVAILABILITY PER FCC": " 0.79 ", "BROADBAND USAGE": " 0.39 "}, {"ST": "VA", "COUNTY ID": "51067", "COUNTY NAME": "Franklin County", "BROADBAND AVAILABILITY PER FCC": " 0.85 ", "BROADBAND USAGE": " 0.13 "}, {"ST": "VA", "COUNTY ID": "51069", "COUNTY NAME": "Frederick County", "BROADBAND AVAILABILITY PER FCC": " 0.80 ", "BROADBAND USAGE": " 0.49 "}, {"ST": "VA", "COUNTY ID": "51071", "COUNTY NAME": "Giles County", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.13 "}, {"ST": "VA", "COUNTY ID": "51073", "COUNTY NAME": "Gloucester County", "BROADBAND AVAILABILITY PER FCC": " 0.94 ", "BROADBAND USAGE": " 0.55 "}, {"ST": "VA", "COUNTY ID": "51075", "COUNTY NAME": "Goochland County", "BROADBAND AVAILABILITY PER FCC": " 0.66 ", "BROADBAND USAGE": " 0.38 "}, {"ST": "VA", "COUNTY ID": "51077", "COUNTY NAME": "Grayson County", "BROADBAND AVAILABILITY PER FCC": " 0.74 ", "BROADBAND USAGE": " 0.05 "}, {"ST": "VA", "COUNTY ID": "51079", "COUNTY NAME": "Greene County", "BROADBAND AVAILABILITY PER FCC": " 0.88 ", "BROADBAND USAGE": " 0.45 "}, {"ST": "VA", "COUNTY ID": "51081", "COUNTY NAME": "Greensville County", "BROADBAND AVAILABILITY PER FCC": " 0.25 ", "BROADBAND USAGE": " 0.17 "}, {"ST": "VA", "COUNTY ID": "51083", "COUNTY NAME": "Halifax County", "BROADBAND AVAILABILITY PER FCC": " 0.51 ", "BROADBAND USAGE": " 0.15 "}, {"ST": "VA", "COUNTY ID": "51085", "COUNTY NAME": "Hanover County", "BROADBAND AVAILABILITY PER FCC": " 0.88 ", "BROADBAND USAGE": " 0.61 "}, {"ST": "VA", "COUNTY ID": "51087", "COUNTY NAME": "Henrico County", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.67 "}, {"ST": "VA", "COUNTY ID": "51089", "COUNTY NAME": "Henry County", "BROADBAND AVAILABILITY PER FCC": " 0.97 ", "BROADBAND USAGE": " 0.27 "}, {"ST": "VA", "COUNTY ID": "51091", "COUNTY NAME": "Highland County", "BROADBAND AVAILABILITY PER FCC": " -   ", "BROADBAND USAGE": " 0.08 "}, {"ST": "VA", "COUNTY ID": "51093", "COUNTY NAME": "Isle of Wight County", "BROADBAND AVAILABILITY PER FCC": " 0.85 ", "BROADBAND USAGE": " 0.42 "}, {"ST": "VA", "COUNTY ID": "51095", "COUNTY NAME": "James City County", "BROADBAND AVAILABILITY PER FCC": " 0.94 ", "BROADBAND USAGE": " 0.69 "}, {"ST": "VA", "COUNTY ID": "51097", "COUNTY NAME": "King and Queen County", "BROADBAND AVAILABILITY PER FCC": " 0.17 ", "BROADBAND USAGE": " 0.06 "}, {"ST": "VA", "COUNTY ID": "51099", "COUNTY NAME": "King George County", "BROADBAND AVAILABILITY PER FCC": " 0.93 ", "BROADBAND USAGE": " 0.62 "}, {"ST": "VA", "COUNTY ID": "51101", "COUNTY NAME": "King William County", "BROADBAND AVAILABILITY PER FCC": " 0.20 ", "BROADBAND USAGE": " 0.13 "}, {"ST": "VA", "COUNTY ID": "51103", "COUNTY NAME": "Lancaster County", "BROADBAND AVAILABILITY PER FCC": " 0.72 ", "BROADBAND USAGE": " 0.37 "}, {"ST": "VA", "COUNTY ID": "51105", "COUNTY NAME": "Lee County", "BROADBAND AVAILABILITY PER FCC": " 0.88 ", "BROADBAND USAGE": " 0.18 "}, {"ST": "VA", "COUNTY ID": "51107", "COUNTY NAME": "Loudoun County", "BROADBAND AVAILABILITY PER FCC": " 0.95 ", "BROADBAND USAGE": " 0.98 "}, {"ST": "VA", "COUNTY ID": "51109", "COUNTY NAME": "Louisa County", "BROADBAND AVAILABILITY PER FCC": " 0.58 ", "BROADBAND USAGE": " 0.18 "}, {"ST": "VA", "COUNTY ID": "51111", "COUNTY NAME": "Lunenburg County", "BROADBAND AVAILABILITY PER FCC": " 0.31 ", "BROADBAND USAGE": " 0.05 "}, {"ST": "VA", "COUNTY ID": "51113", "COUNTY NAME": "Madison County", "BROADBAND AVAILABILITY PER FCC": " 0.92 ", "BROADBAND USAGE": " 0.23 "}, {"ST": "VA", "COUNTY ID": "51115", "COUNTY NAME": "Mathews County", "BROADBAND AVAILABILITY PER FCC": " 0.94 ", "BROADBAND USAGE": " 0.25 "}, {"ST": "VA", "COUNTY ID": "51117", "COUNTY NAME": "Mecklenburg County", "BROADBAND AVAILABILITY PER FCC": " 0.46 ", "BROADBAND USAGE": " 0.16 "}, {"ST": "VA", "COUNTY ID": "51119", "COUNTY NAME": "Middlesex County", "BROADBAND AVAILABILITY PER FCC": " 0.87 ", "BROADBAND USAGE": " 0.36 "}, {"ST": "VA", "COUNTY ID": "51121", "COUNTY NAME": "Montgomery County", "BROADBAND AVAILABILITY PER FCC": " 0.85 ", "BROADBAND USAGE": " 0.35 "}, {"ST": "VA", "COUNTY ID": "51125", "COUNTY NAME": "Nelson County", "BROADBAND AVAILABILITY PER FCC": " 0.95 ", "BROADBAND USAGE": " 0.18 "}, {"ST": "VA", "COUNTY ID": "51127", "COUNTY NAME": "New Kent County", "BROADBAND AVAILABILITY PER FCC": " 0.77 ", "BROADBAND USAGE": " 0.51 "}, {"ST": "VA", "COUNTY ID": "51131", "COUNTY NAME": "Northampton County", "BROADBAND AVAILABILITY PER FCC": " 0.68 ", "BROADBAND USAGE": " 0.06 "}, {"ST": "VA", "COUNTY ID": "51133", "COUNTY NAME": "Northumberland County", "BROADBAND AVAILABILITY PER FCC": " 0.83 ", "BROADBAND USAGE": " 0.27 "}, {"ST": "VA", "COUNTY ID": "51135", "COUNTY NAME": "Nottoway County", "BROADBAND AVAILABILITY PER FCC": " 0.56 ", "BROADBAND USAGE": " 0.08 "}, {"ST": "VA", "COUNTY ID": "51137", "COUNTY NAME": "Orange County", "BROADBAND AVAILABILITY PER FCC": " 0.83 ", "BROADBAND USAGE": " 0.37 "}, {"ST": "VA", "COUNTY ID": "51139", "COUNTY NAME": "Page County", "BROADBAND AVAILABILITY PER FCC": " 0.82 ", "BROADBAND USAGE": " 0.23 "}, {"ST": "VA", "COUNTY ID": "51141", "COUNTY NAME": "Patrick County", "BROADBAND AVAILABILITY PER FCC": " 0.48 ", "BROADBAND USAGE": " 0.05 "}, {"ST": "VA", "COUNTY ID": "51143", "COUNTY NAME": "Pittsylvania County", "BROADBAND AVAILABILITY PER FCC": " 0.66 ", "BROADBAND USAGE": " 0.09 "}, {"ST": "VA", "COUNTY ID": "51145", "COUNTY NAME": "Powhatan County", "BROADBAND AVAILABILITY PER FCC": " 0.83 ", "BROADBAND USAGE": " 0.54 "}, {"ST": "VA", "COUNTY ID": "51147", "COUNTY NAME": "Prince Edward County", "BROADBAND AVAILABILITY PER FCC": " 0.66 ", "BROADBAND USAGE": " 0.12 "}, {"ST": "VA", "COUNTY ID": "51149", "COUNTY NAME": "Prince George County", "BROADBAND AVAILABILITY PER FCC": " 0.83 ", "BROADBAND USAGE": " 0.42 "}, {"ST": "VA", "COUNTY ID": "51153", "COUNTY NAME": "Prince William County", "BROADBAND AVAILABILITY PER FCC": " 0.97 ", "BROADBAND USAGE": " 0.79 "}, {"ST": "VA", "COUNTY ID": "51155", "COUNTY NAME": "Pulaski County", "BROADBAND AVAILABILITY PER FCC": " 0.88 ", "BROADBAND USAGE": " 0.33 "}, {"ST": "VA", "COUNTY ID": "51157", "COUNTY NAME": "Rappahannock County", "BROADBAND AVAILABILITY PER FCC": " 0.82 ", "BROADBAND USAGE": " 0.18 "}, {"ST": "VA", "COUNTY ID": "51159", "COUNTY NAME": "Richmond County", "BROADBAND AVAILABILITY PER FCC": " 0.63 ", "BROADBAND USAGE": " 0.36 "}, {"ST": "VA", "COUNTY ID": "51161", "COUNTY NAME": "Roanoke County", "BROADBAND AVAILABILITY PER FCC": " 0.97 ", "BROADBAND USAGE": " 0.53 "}, {"ST": "VA", "COUNTY ID": "51163", "COUNTY NAME": "Rockbridge County", "BROADBAND AVAILABILITY PER FCC": " 0.62 ", "BROADBAND USAGE": " 0.29 "}, {"ST": "VA", "COUNTY ID": "51165", "COUNTY NAME": "Rockingham County", "BROADBAND AVAILABILITY PER FCC": " 0.83 ", "BROADBAND USAGE": " 0.29 "}, {"ST": "VA", "COUNTY ID": "51167", "COUNTY NAME": "Russell County", "BROADBAND AVAILABILITY PER FCC": " 0.88 ", "BROADBAND USAGE": " 0.11 "}, {"ST": "VA", "COUNTY ID": "51169", "COUNTY NAME": "Scott County", "BROADBAND AVAILABILITY PER FCC": " 0.83 ", "BROADBAND USAGE": " 0.17 "}, {"ST": "VA", "COUNTY ID": "51171", "COUNTY NAME": "Shenandoah County", "BROADBAND AVAILABILITY PER FCC": " 0.85 ", "BROADBAND USAGE": " 0.21 "}, {"ST": "VA", "COUNTY ID": "51173", "COUNTY NAME": "Smyth County", "BROADBAND AVAILABILITY PER FCC": " 0.94 ", "BROADBAND USAGE": " 0.25 "}, {"ST": "VA", "COUNTY ID": "51175", "COUNTY NAME": "Southampton County", "BROADBAND AVAILABILITY PER FCC": " 0.48 ", "BROADBAND USAGE": " 0.11 "}, {"ST": "VA", "COUNTY ID": "51177", "COUNTY NAME": "Spotsylvania County", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.78 "}, {"ST": "VA", "COUNTY ID": "51179", "COUNTY NAME": "Stafford County", "BROADBAND AVAILABILITY PER FCC": " 0.99 ", "BROADBAND USAGE": " 0.90 "}, {"ST": "VA", "COUNTY ID": "51181", "COUNTY NAME": "Surry County", "BROADBAND AVAILABILITY PER FCC": " -   ", "BROADBAND USAGE": " 0.05 "}, {"ST": "VA", "COUNTY ID": "51183", "COUNTY NAME": "Sussex County", "BROADBAND AVAILABILITY PER FCC": " 0.34 ", "BROADBAND USAGE": " 0.13 "}, {"ST": "VA", "COUNTY ID": "51185", "COUNTY NAME": "Tazewell County", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.25 "}, {"ST": "VA", "COUNTY ID": "51187", "COUNTY NAME": "Warren County", "BROADBAND AVAILABILITY PER FCC": " 0.91 ", "BROADBAND USAGE": " 0.63 "}, {"ST": "VA", "COUNTY ID": "51191", "COUNTY NAME": "Washington County", "BROADBAND AVAILABILITY PER FCC": " 0.99 ", "BROADBAND USAGE": " 0.31 "}, {"ST": "VA", "COUNTY ID": "51193", "COUNTY NAME": "Westmoreland County", "BROADBAND AVAILABILITY PER FCC": " 0.90 ", "BROADBAND USAGE": " 0.28 "}, {"ST": "VA", "COUNTY ID": "51195", "COUNTY NAME": "Wise County", "BROADBAND AVAILABILITY PER FCC": " 0.95 ", "BROADBAND USAGE": " 0.25 "}, {"ST": "VA", "COUNTY ID": "51197", "COUNTY NAME": "Wythe County", "BROADBAND AVAILABILITY PER FCC": " 0.89 ", "BROADBAND USAGE": " 0.11 "}, {"ST": "VA", "COUNTY ID": "51199", "COUNTY NAME": "York County", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.76 "}, {"ST": "VA", "COUNTY ID": "51510", "COUNTY NAME": "Alexandria city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.56 "}, {"ST": "VA", "COUNTY ID": "51515", "COUNTY NAME": "Bedford city", "BROADBAND AVAILABILITY PER FCC": " -   ", "BROADBAND USAGE": " -   "}, {"ST": "VA", "COUNTY ID": "51520", "COUNTY NAME": "Bristol city", "BROADBAND AVAILABILITY PER FCC": " 1.00 ", "BROADBAND USAGE": " 0.56 "}, {"ST": "VA", "COUNTY ID": "51530", "COUNTY NAME": "Buena Vista city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.32 "}, {"ST": "VA", "COUNTY ID": "51540", "COUNTY NAME": "Charlottesville city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.62 "}, {"ST": "VA", "COUNTY ID": "51550", "COUNTY NAME": "Chesapeake city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.75 "}, {"ST": "VA", "COUNTY ID": "51570", "COUNTY NAME": "Colonial Heights city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.49 "}, {"ST": "VA", "COUNTY ID": "51580", "COUNTY NAME": "Covington city", "BROADBAND AVAILABILITY PER FCC": " 1.00 ", "BROADBAND USAGE": " -   "}, {"ST": "VA", "COUNTY ID": "51590", "COUNTY NAME": "Danville city", "BROADBAND AVAILABILITY PER FCC": " 0.99 ", "BROADBAND USAGE": " 0.37 "}, {"ST": "VA", "COUNTY ID": "51595", "COUNTY NAME": "Emporia city", "BROADBAND AVAILABILITY PER FCC": " 0.97 ", "BROADBAND USAGE": " -   "}, {"ST": "VA", "COUNTY ID": "51600", "COUNTY NAME": "Fairfax city", "BROADBAND AVAILABILITY PER FCC": " 0.97 ", "BROADBAND USAGE": " -   "}, {"ST": "VA", "COUNTY ID": "51610", "COUNTY NAME": "Falls Church city", "BROADBAND AVAILABILITY PER FCC": " 0.99 ", "BROADBAND USAGE": " 1.00 "}, {"ST": "VA", "COUNTY ID": "51620", "COUNTY NAME": "Franklin city", "BROADBAND AVAILABILITY PER FCC": " 1.00 ", "BROADBAND USAGE": " 0.27 "}, {"ST": "VA", "COUNTY ID": "51630", "COUNTY NAME": "Fredericksburg city", "BROADBAND AVAILABILITY PER FCC": " 0.93 ", "BROADBAND USAGE": " 0.75 "}, {"ST": "VA", "COUNTY ID": "51640", "COUNTY NAME": "Galax city", "BROADBAND AVAILABILITY PER FCC": " 0.96 ", "BROADBAND USAGE": " 0.26 "}, {"ST": "VA", "COUNTY ID": "51650", "COUNTY NAME": "Hampton city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.55 "}, {"ST": "VA", "COUNTY ID": "51660", "COUNTY NAME": "Harrisonburg city", "BROADBAND AVAILABILITY PER FCC": " 0.92 ", "BROADBAND USAGE": " 0.58 "}, {"ST": "VA", "COUNTY ID": "51670", "COUNTY NAME": "Hopewell city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.38 "}, {"ST": "VA", "COUNTY ID": "51678", "COUNTY NAME": "Lexington city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " -   "}, {"ST": "VA", "COUNTY ID": "51680", "COUNTY NAME": "Lynchburg city", "BROADBAND AVAILABILITY PER FCC": " 0.94 ", "BROADBAND USAGE": " 0.34 "}, {"ST": "VA", "COUNTY ID": "51683", "COUNTY NAME": "Manassas city", "BROADBAND AVAILABILITY PER FCC": " 0.96 ", "BROADBAND USAGE": " 1.00 "}, {"ST": "VA", "COUNTY ID": "51685", "COUNTY NAME": "Manassas Park city", "BROADBAND AVAILABILITY PER FCC": " 0.99 ", "BROADBAND USAGE": " -   "}, {"ST": "VA", "COUNTY ID": "51690", "COUNTY NAME": "Martinsville city", "BROADBAND AVAILABILITY PER FCC": " 0.99 ", "BROADBAND USAGE": " -   "}, {"ST": "VA", "COUNTY ID": "51700", "COUNTY NAME": "Newport News city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.58 "}, {"ST": "VA", "COUNTY ID": "51710", "COUNTY NAME": "Norfolk city", "BROADBAND AVAILABILITY PER FCC": " 0.96 ", "BROADBAND USAGE": " 0.55 "}, {"ST": "VA", "COUNTY ID": "51720", "COUNTY NAME": "Norton city", "BROADBAND AVAILABILITY PER FCC": " 0.97 ", "BROADBAND USAGE": " 0.43 "}, {"ST": "VA", "COUNTY ID": "51730", "COUNTY NAME": "Petersburg city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.37 "}, {"ST": "VA", "COUNTY ID": "51735", "COUNTY NAME": "Poquoson city", "BROADBAND AVAILABILITY PER FCC": " 0.99 ", "BROADBAND USAGE": " 0.72 "}, {"ST": "VA", "COUNTY ID": "51740", "COUNTY NAME": "Portsmouth city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.48 "}, {"ST": "VA", "COUNTY ID": "51750", "COUNTY NAME": "Radford city", "BROADBAND AVAILABILITY PER FCC": " 0.99 ", "BROADBAND USAGE": " 0.10 "}, {"ST": "VA", "COUNTY ID": "51760", "COUNTY NAME": "Richmond city", "BROADBAND AVAILABILITY PER FCC": " 0.95 ", "BROADBAND USAGE": " 0.54 "}, {"ST": "VA", "COUNTY ID": "51770", "COUNTY NAME": "Roanoke city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.59 "}, {"ST": "VA", "COUNTY ID": "51775", "COUNTY NAME": "Salem city", "BROADBAND AVAILABILITY PER FCC": " 0.96 ", "BROADBAND USAGE": " 0.53 "}, {"ST": "VA", "COUNTY ID": "51790", "COUNTY NAME": "Staunton city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.54 "}, {"ST": "VA", "COUNTY ID": "51800", "COUNTY NAME": "Suffolk city", "BROADBAND AVAILABILITY PER FCC": " 0.95 ", "BROADBAND USAGE": " 0.51 "}, {"ST": "VA", "COUNTY ID": "51810", "COUNTY NAME": "Virginia Beach city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.70 "}, {"ST": "VA", "COUNTY ID": "51820", "COUNTY NAME": "Waynesboro city", "BROADBAND AVAILABILITY PER FCC": " 0.98 ", "BROADBAND USAGE": " 0.61 "}, {"ST": "VA", "COUNTY ID": "51830", "COUNTY NAME": "Williamsburg city", "BROADBAND AVAILABILITY PER FCC": " 0.71 ", "BROADBAND USAGE": " 1.00 "}, {"ST": "VA", "COUNTY ID": "51840", "COUNTY NAME": "Winchester city", "BROADBAND AVAILABILITY PER FCC": " 0.99 ", "BROADBAND USAGE": " 0.99 "}];
+        const csvData2020 = [{"ST": "VA", "COUNTY ID": "51001", "COUNTY NAME": "Accomack County", "BROADBAND AVAILABILITY PER FCC": "0.9048", "BROADBAND USAGE": "0.169"}, {"ST": "VA", "COUNTY ID": "51003", "COUNTY NAME": "Albemarle County", "BROADBAND AVAILABILITY PER FCC": "0.9258", "BROADBAND USAGE": "0.536"}, {"ST": "VA", "COUNTY ID": "51005", "COUNTY NAME": "Alleghany County", "BROADBAND AVAILABILITY PER FCC": "0.9362", "BROADBAND USAGE": "0.706"}, {"ST": "VA", "COUNTY ID": "51007", "COUNTY NAME": "Amelia County", "BROADBAND AVAILABILITY PER FCC": "0.7044", "BROADBAND USAGE": "0.154"}, {"ST": "VA", "COUNTY ID": "51009", "COUNTY NAME": "Amherst County", "BROADBAND AVAILABILITY PER FCC": "0.9422", "BROADBAND USAGE": "0.374"}, {"ST": "VA", "COUNTY ID": "51011", "COUNTY NAME": "Appomattox County", "BROADBAND AVAILABILITY PER FCC": "0.7673", "BROADBAND USAGE": "0.253"}, {"ST": "VA", "COUNTY ID": "51013", "COUNTY NAME": "Arlington County", "BROADBAND AVAILABILITY PER FCC": "0.981", "BROADBAND USAGE": "0.776"}, {"ST": "VA", "COUNTY ID": "51015", "COUNTY NAME": "Augusta County", "BROADBAND AVAILABILITY PER FCC": "0.9836", "BROADBAND USAGE": "0.271"}, {"ST": "VA", "COUNTY ID": "51017", "COUNTY NAME": "Bath County", "BROADBAND AVAILABILITY PER FCC": "0.7263", "BROADBAND USAGE": "0.189"}, {"ST": "VA", "COUNTY ID": "51019", "COUNTY NAME": "Bedford County", "BROADBAND AVAILABILITY PER FCC": "0.8175", "BROADBAND USAGE": "0.442"}, {"ST": "VA", "COUNTY ID": "51021", "COUNTY NAME": "Bland County", "BROADBAND AVAILABILITY PER FCC": "0.7895", "BROADBAND USAGE": "0.085"}, {"ST": "VA", "COUNTY ID": "51023", "COUNTY NAME": "Botetourt County", "BROADBAND AVAILABILITY PER FCC": "0.8039", "BROADBAND USAGE": "0.46"}, {"ST": "VA", "COUNTY ID": "51025", "COUNTY NAME": "Brunswick County", "BROADBAND AVAILABILITY PER FCC": "0.2962", "BROADBAND USAGE": "0.045"}, {"ST": "VA", "COUNTY ID": "51027", "COUNTY NAME": "Buchanan County", "BROADBAND AVAILABILITY PER FCC": "1", "BROADBAND USAGE": "0.234"}, {"ST": "VA", "COUNTY ID": "51029", "COUNTY NAME": "Buckingham County", "BROADBAND AVAILABILITY PER FCC": "0.3976", "BROADBAND USAGE": "0.107"}, {"ST": "VA", "COUNTY ID": "51031", "COUNTY NAME": "Campbell County", "BROADBAND AVAILABILITY PER FCC": "0.7914", "BROADBAND USAGE": "0.202"}, {"ST": "VA", "COUNTY ID": "51033", "COUNTY NAME": "Caroline County", "BROADBAND AVAILABILITY PER FCC": "0.6407", "BROADBAND USAGE": "0.416"}, {"ST": "VA", "COUNTY ID": "51035", "COUNTY NAME": "Carroll County", "BROADBAND AVAILABILITY PER FCC": "0.9486", "BROADBAND USAGE": "0.109"}, {"ST": "VA", "COUNTY ID": "51036", "COUNTY NAME": "Charles City County", "BROADBAND AVAILABILITY PER FCC": "1", "BROADBAND USAGE": "0.075"}, {"ST": "VA", "COUNTY ID": "51037", "COUNTY NAME": "Charlotte County", "BROADBAND AVAILABILITY PER FCC": "0.5263", "BROADBAND USAGE": "0.094"}, {"ST": "VA", "COUNTY ID": "51041", "COUNTY NAME": "Chesterfield County", "BROADBAND AVAILABILITY PER FCC": "0.9726", "BROADBAND USAGE": "0.88"}, {"ST": "VA", "COUNTY ID": "51043", "COUNTY NAME": "Clarke County", "BROADBAND AVAILABILITY PER FCC": "0.9947", "BROADBAND USAGE": "0.262"}, {"ST": "VA", "COUNTY ID": "51045", "COUNTY NAME": "Craig County", "BROADBAND AVAILABILITY PER FCC": "0.7472", "BROADBAND USAGE": "0.086"}, {"ST": "VA", "COUNTY ID": "51047", "COUNTY NAME": "Culpeper County", "BROADBAND AVAILABILITY PER FCC": "0.9987", "BROADBAND USAGE": "0.696"}, {"ST": "VA", "COUNTY ID": "51049", "COUNTY NAME": "Cumberland County", "BROADBAND AVAILABILITY PER FCC": "0.1965", "BROADBAND USAGE": "0.05"}, {"ST": "VA", "COUNTY ID": "51051", "COUNTY NAME": "Dickenson County", "BROADBAND AVAILABILITY PER FCC": "0.9777", "BROADBAND USAGE": "0.257"}, {"ST": "VA", "COUNTY ID": "51053", "COUNTY NAME": "Dinwiddie County", "BROADBAND AVAILABILITY PER FCC": "0.5476", "BROADBAND USAGE": "0.06"}, {"ST": "VA", "COUNTY ID": "51057", "COUNTY NAME": "Essex County", "BROADBAND AVAILABILITY PER FCC": "0.7493", "BROADBAND USAGE": "0.414"}, {"ST": "VA", "COUNTY ID": "51059", "COUNTY NAME": "Fairfax County", "BROADBAND AVAILABILITY PER FCC": "0.9848", "BROADBAND USAGE": "0.884"}, {"ST": "VA", "COUNTY ID": "51061", "COUNTY NAME": "Fauquier County", "BROADBAND AVAILABILITY PER FCC": "0.9032", "BROADBAND USAGE": "0.533"}, {"ST": "VA", "COUNTY ID": "51063", "COUNTY NAME": "Floyd County", "BROADBAND AVAILABILITY PER FCC": "0.7595", "BROADBAND USAGE": "0.308"}, {"ST": "VA", "COUNTY ID": "51065", "COUNTY NAME": "Fluvanna County", "BROADBAND AVAILABILITY PER FCC": "0.8218", "BROADBAND USAGE": "0.571"}, {"ST": "VA", "COUNTY ID": "51067", "COUNTY NAME": "Franklin County", "BROADBAND AVAILABILITY PER FCC": "0.8811", "BROADBAND USAGE": "0.315"}, {"ST": "VA", "COUNTY ID": "51069", "COUNTY NAME": "Frederick County", "BROADBAND AVAILABILITY PER FCC": "0.8305", "BROADBAND USAGE": "0.587"}, {"ST": "VA", "COUNTY ID": "51071", "COUNTY NAME": "Giles County", "BROADBAND AVAILABILITY PER FCC": "0.959", "BROADBAND USAGE": "0.117"}, {"ST": "VA", "COUNTY ID": "51073", "COUNTY NAME": "Gloucester County", "BROADBAND AVAILABILITY PER FCC": "0.949", "BROADBAND USAGE": "0.708"}, {"ST": "VA", "COUNTY ID": "51075", "COUNTY NAME": "Goochland County", "BROADBAND AVAILABILITY PER FCC": "0.669", "BROADBAND USAGE": "0.402"}, {"ST": "VA", "COUNTY ID": "51077", "COUNTY NAME": "Grayson County", "BROADBAND AVAILABILITY PER FCC": "0.7522", "BROADBAND USAGE": "0.054"}, {"ST": "VA", "COUNTY ID": "51079", "COUNTY NAME": "Greene County", "BROADBAND AVAILABILITY PER FCC": "0.9986", "BROADBAND USAGE": "0.54"}, {"ST": "VA", "COUNTY ID": "51081", "COUNTY NAME": "Greensville County", "BROADBAND AVAILABILITY PER FCC": "0.2399", "BROADBAND USAGE": "0.377"}, {"ST": "VA", "COUNTY ID": "51083", "COUNTY NAME": "Halifax County", "BROADBAND AVAILABILITY PER FCC": "0.7176", "BROADBAND USAGE": "0.265"}, {"ST": "VA", "COUNTY ID": "51085", "COUNTY NAME": "Hanover County", "BROADBAND AVAILABILITY PER FCC": "0.8804", "BROADBAND USAGE": "0.634"}, {"ST": "VA", "COUNTY ID": "51087", "COUNTY NAME": "Henrico County", "BROADBAND AVAILABILITY PER FCC": "0.9818", "BROADBAND USAGE": "0.726"}, {"ST": "VA", "COUNTY ID": "51089", "COUNTY NAME": "Henry County", "BROADBAND AVAILABILITY PER FCC": "0.9623", "BROADBAND USAGE": "0.583"}, {"ST": "VA", "COUNTY ID": "51091", "COUNTY NAME": "Highland County", "BROADBAND AVAILABILITY PER FCC": "0.4817", "BROADBAND USAGE": "0.112"}, {"ST": "VA", "COUNTY ID": "51093", "COUNTY NAME": "Isle of Wight County", "BROADBAND AVAILABILITY PER FCC": "0.8583", "BROADBAND USAGE": "0.633"}, {"ST": "VA", "COUNTY ID": "51095", "COUNTY NAME": "James City County", "BROADBAND AVAILABILITY PER FCC": "0.9464", "BROADBAND USAGE": "0.764"}, {"ST": "VA", "COUNTY ID": "51097", "COUNTY NAME": "King and Queen County", "BROADBAND AVAILABILITY PER FCC": "0.2235", "BROADBAND USAGE": "0.065"}, {"ST": "VA", "COUNTY ID": "51099", "COUNTY NAME": "King George County", "BROADBAND AVAILABILITY PER FCC": "0.9335", "BROADBAND USAGE": "0.898"}, {"ST": "VA", "COUNTY ID": "51101", "COUNTY NAME": "King William County", "BROADBAND AVAILABILITY PER FCC": "0.4111", "BROADBAND USAGE": "0.274"}, {"ST": "VA", "COUNTY ID": "51103", "COUNTY NAME": "Lancaster County", "BROADBAND AVAILABILITY PER FCC": "1", "BROADBAND USAGE": "0.493"}, {"ST": "VA", "COUNTY ID": "51105", "COUNTY NAME": "Lee County", "BROADBAND AVAILABILITY PER FCC": "0.8892", "BROADBAND USAGE": "0.237"}, {"ST": "VA", "COUNTY ID": "51107", "COUNTY NAME": "Loudoun County", "BROADBAND AVAILABILITY PER FCC": "0.9956", "BROADBAND USAGE": "0.883"}, {"ST": "VA", "COUNTY ID": "51109", "COUNTY NAME": "Louisa County", "BROADBAND AVAILABILITY PER FCC": "0.6802", "BROADBAND USAGE": "0.21"}, {"ST": "VA", "COUNTY ID": "51111", "COUNTY NAME": "Lunenburg County", "BROADBAND AVAILABILITY PER FCC": "0.2935", "BROADBAND USAGE": "0.124"}, {"ST": "VA", "COUNTY ID": "51113", "COUNTY NAME": "Madison County", "BROADBAND AVAILABILITY PER FCC": "1", "BROADBAND USAGE": "0.17"}, {"ST": "VA", "COUNTY ID": "51115", "COUNTY NAME": "Mathews County", "BROADBAND AVAILABILITY PER FCC": "0.9606", "BROADBAND USAGE": "0.281"}, {"ST": "VA", "COUNTY ID": "51117", "COUNTY NAME": "Mecklenburg County", "BROADBAND AVAILABILITY PER FCC": "0.5716", "BROADBAND USAGE": "0.348"}, {"ST": "VA", "COUNTY ID": "51119", "COUNTY NAME": "Middlesex County", "BROADBAND AVAILABILITY PER FCC": "0.9738", "BROADBAND USAGE": "0.527"}, {"ST": "VA", "COUNTY ID": "51121", "COUNTY NAME": "Montgomery County", "BROADBAND AVAILABILITY PER FCC": "0.9935", "BROADBAND USAGE": "0.385"}, {"ST": "VA", "COUNTY ID": "51125", "COUNTY NAME": "Nelson County", "BROADBAND AVAILABILITY PER FCC": "0.9488", "BROADBAND USAGE": "0.445"}, {"ST": "VA", "COUNTY ID": "51127", "COUNTY NAME": "New Kent County", "BROADBAND AVAILABILITY PER FCC": "0.7664", "BROADBAND USAGE": "0.624"}, {"ST": "VA", "COUNTY ID": "51131", "COUNTY NAME": "Northampton County", "BROADBAND AVAILABILITY PER FCC": "0.9408", "BROADBAND USAGE": "0.219"}, {"ST": "VA", "COUNTY ID": "51133", "COUNTY NAME": "Northumberland County", "BROADBAND AVAILABILITY PER FCC": "1", "BROADBAND USAGE": "0.41"}, {"ST": "VA", "COUNTY ID": "51135", "COUNTY NAME": "Nottoway County", "BROADBAND AVAILABILITY PER FCC": "0.5574", "BROADBAND USAGE": "0.098"}, {"ST": "VA", "COUNTY ID": "51137", "COUNTY NAME": "Orange County", "BROADBAND AVAILABILITY PER FCC": "0.9977", "BROADBAND USAGE": "0.407"}, {"ST": "VA", "COUNTY ID": "51139", "COUNTY NAME": "Page County", "BROADBAND AVAILABILITY PER FCC": "0.9948", "BROADBAND USAGE": "0.253"}, {"ST": "VA", "COUNTY ID": "51141", "COUNTY NAME": "Patrick County", "BROADBAND AVAILABILITY PER FCC": "0.4424", "BROADBAND USAGE": "0.075"}, {"ST": "VA", "COUNTY ID": "51143", "COUNTY NAME": "Pittsylvania County", "BROADBAND AVAILABILITY PER FCC": "0.7056", "BROADBAND USAGE": "0.123"}, {"ST": "VA", "COUNTY ID": "51145", "COUNTY NAME": "Powhatan County", "BROADBAND AVAILABILITY PER FCC": "0.8348", "BROADBAND USAGE": "0.802"}, {"ST": "VA", "COUNTY ID": "51147", "COUNTY NAME": "Prince Edward County", "BROADBAND AVAILABILITY PER FCC": "0.6368", "BROADBAND USAGE": "0.21"}, {"ST": "VA", "COUNTY ID": "51149", "COUNTY NAME": "Prince George County", "BROADBAND AVAILABILITY PER FCC": "0.896", "BROADBAND USAGE": "0.555"}, {"ST": "VA", "COUNTY ID": "51153", "COUNTY NAME": "Prince William County", "BROADBAND AVAILABILITY PER FCC": "0.973", "BROADBAND USAGE": "0.818"}, {"ST": "VA", "COUNTY ID": "51155", "COUNTY NAME": "Pulaski County", "BROADBAND AVAILABILITY PER FCC": "0.9979", "BROADBAND USAGE": "0.442"}, {"ST": "VA", "COUNTY ID": "51157", "COUNTY NAME": "Rappahannock County", "BROADBAND AVAILABILITY PER FCC": "0.9178", "BROADBAND USAGE": "0.258"}, {"ST": "VA", "COUNTY ID": "51159", "COUNTY NAME": "Richmond County", "BROADBAND AVAILABILITY PER FCC": "0.9871", "BROADBAND USAGE": "0.462"}, {"ST": "VA", "COUNTY ID": "51161", "COUNTY NAME": "Roanoke County", "BROADBAND AVAILABILITY PER FCC": "0.9877", "BROADBAND USAGE": "0.401"}, {"ST": "VA", "COUNTY ID": "51163", "COUNTY NAME": "Rockbridge County", "BROADBAND AVAILABILITY PER FCC": "0.8509", "BROADBAND USAGE": "0.416"}, {"ST": "VA", "COUNTY ID": "51165", "COUNTY NAME": "Rockingham County", "BROADBAND AVAILABILITY PER FCC": "0.989", "BROADBAND USAGE": "0.278"}, {"ST": "VA", "COUNTY ID": "51167", "COUNTY NAME": "Russell County", "BROADBAND AVAILABILITY PER FCC": "0.895", "BROADBAND USAGE": "0.195"}, {"ST": "VA", "COUNTY ID": "51169", "COUNTY NAME": "Scott County", "BROADBAND AVAILABILITY PER FCC": "0.8258", "BROADBAND USAGE": "0.331"}, {"ST": "VA", "COUNTY ID": "51171", "COUNTY NAME": "Shenandoah County", "BROADBAND AVAILABILITY PER FCC": "0.9117", "BROADBAND USAGE": "0.265"}, {"ST": "VA", "COUNTY ID": "51173", "COUNTY NAME": "Smyth County", "BROADBAND AVAILABILITY PER FCC": "0.935", "BROADBAND USAGE": "0.346"}, {"ST": "VA", "COUNTY ID": "51175", "COUNTY NAME": "Southampton County", "BROADBAND AVAILABILITY PER FCC": "0.4755", "BROADBAND USAGE": "0.063"}, {"ST": "VA", "COUNTY ID": "51177", "COUNTY NAME": "Spotsylvania County", "BROADBAND AVAILABILITY PER FCC": "0.9845", "BROADBAND USAGE": "0.849"}, {"ST": "VA", "COUNTY ID": "51179", "COUNTY NAME": "Stafford County", "BROADBAND AVAILABILITY PER FCC": "0.988", "BROADBAND USAGE": "0.885"}, {"ST": "VA", "COUNTY ID": "51181", "COUNTY NAME": "Surry County", "BROADBAND AVAILABILITY PER FCC": "0.9182", "BROADBAND USAGE": "0.055"}, {"ST": "VA", "COUNTY ID": "51183", "COUNTY NAME": "Sussex County", "BROADBAND AVAILABILITY PER FCC": "0.4528", "BROADBAND USAGE": "0.172"}, {"ST": "VA", "COUNTY ID": "51185", "COUNTY NAME": "Tazewell County", "BROADBAND AVAILABILITY PER FCC": "0.9889", "BROADBAND USAGE": "0.347"}, {"ST": "VA", "COUNTY ID": "51187", "COUNTY NAME": "Warren County", "BROADBAND AVAILABILITY PER FCC": "0.9191", "BROADBAND USAGE": "0.672"}, {"ST": "VA", "COUNTY ID": "51191", "COUNTY NAME": "Washington County", "BROADBAND AVAILABILITY PER FCC": "0.992", "BROADBAND USAGE": "0.568"}, {"ST": "VA", "COUNTY ID": "51193", "COUNTY NAME": "Westmoreland County", "BROADBAND AVAILABILITY PER FCC": "0.9393", "BROADBAND USAGE": "0.42"}, {"ST": "VA", "COUNTY ID": "51195", "COUNTY NAME": "Wise County", "BROADBAND AVAILABILITY PER FCC": "0.9637", "BROADBAND USAGE": "0.372"}, {"ST": "VA", "COUNTY ID": "51197", "COUNTY NAME": "Wythe County", "BROADBAND AVAILABILITY PER FCC": "0.8974", "BROADBAND USAGE": "0.207"}, {"ST": "VA", "COUNTY ID": "51199", "COUNTY NAME": "York County", "BROADBAND AVAILABILITY PER FCC": "0.9834", "BROADBAND USAGE": "0.78"}, {"ST": "VA", "COUNTY ID": "51510", "COUNTY NAME": "Alexandria city", "BROADBAND AVAILABILITY PER FCC": "0.9832", "BROADBAND USAGE": "0.747"}, {"ST": "VA", "COUNTY ID": "51520", "COUNTY NAME": "Bristol city", "BROADBAND AVAILABILITY PER FCC": "1", "BROADBAND USAGE": "0.845"}, {"ST": "VA", "COUNTY ID": "51530", "COUNTY NAME": "Buena Vista city", "BROADBAND AVAILABILITY PER FCC": "0.9724", "BROADBAND USAGE": "0.408"}, {"ST": "VA", "COUNTY ID": "51540", "COUNTY NAME": "Charlottesville city", "BROADBAND AVAILABILITY PER FCC": "0.9933", "BROADBAND USAGE": "0.855"}, {"ST": "VA", "COUNTY ID": "51550", "COUNTY NAME": "Chesapeake city", "BROADBAND AVAILABILITY PER FCC": "0.9819", "BROADBAND USAGE": "0.941"}, {"ST": "VA", "COUNTY ID": "51570", "COUNTY NAME": "Colonial Heights city", "BROADBAND AVAILABILITY PER FCC": "0.9872", "BROADBAND USAGE": "1"}, {"ST": "VA", "COUNTY ID": "51580", "COUNTY NAME": "Covington city", "BROADBAND AVAILABILITY PER FCC": "0.9969", "BROADBAND USAGE": " -   "}, {"ST": "VA", "COUNTY ID": "51590", "COUNTY NAME": "Danville city", "BROADBAND AVAILABILITY PER FCC": "0.9911", "BROADBAND USAGE": "0.795"}, {"ST": "VA", "COUNTY ID": "51595", "COUNTY NAME": "Emporia city", "BROADBAND AVAILABILITY PER FCC": "0.96", "BROADBAND USAGE": " -   "}, {"ST": "VA", "COUNTY ID": "51600", "COUNTY NAME": "Fairfax city", "BROADBAND AVAILABILITY PER FCC": "0.9985", "BROADBAND USAGE": " -   "}, {"ST": "VA", "COUNTY ID": "51610", "COUNTY NAME": "Falls Church city", "BROADBAND AVAILABILITY PER FCC": "0.986", "BROADBAND USAGE": "1"}, {"ST": "VA", "COUNTY ID": "51620", "COUNTY NAME": "Franklin city", "BROADBAND AVAILABILITY PER FCC": "0.9999", "BROADBAND USAGE": "0.268"}, {"ST": "VA", "COUNTY ID": "51630", "COUNTY NAME": "Fredericksburg city", "BROADBAND AVAILABILITY PER FCC": "0.9343", "BROADBAND USAGE": "0.788"}, {"ST": "VA", "COUNTY ID": "51640", "COUNTY NAME": "Galax city", "BROADBAND AVAILABILITY PER FCC": "0.9998", "BROADBAND USAGE": "0.473"}, {"ST": "VA", "COUNTY ID": "51650", "COUNTY NAME": "Hampton city", "BROADBAND AVAILABILITY PER FCC": "0.979", "BROADBAND USAGE": "0.813"}, {"ST": "VA", "COUNTY ID": "51660", "COUNTY NAME": "Harrisonburg city", "BROADBAND AVAILABILITY PER FCC": "1", "BROADBAND USAGE": "0.795"}, {"ST": "VA", "COUNTY ID": "51670", "COUNTY NAME": "Hopewell city", "BROADBAND AVAILABILITY PER FCC": "0.9831", "BROADBAND USAGE": "0.599"}, {"ST": "VA", "COUNTY ID": "51678", "COUNTY NAME": "Lexington city", "BROADBAND AVAILABILITY PER FCC": "0.9612", "BROADBAND USAGE": " -   "}, {"ST": "VA", "COUNTY ID": "51680", "COUNTY NAME": "Lynchburg city", "BROADBAND AVAILABILITY PER FCC": "0.9092", "BROADBAND USAGE": "0.675"}, {"ST": "VA", "COUNTY ID": "51683", "COUNTY NAME": "Manassas city", "BROADBAND AVAILABILITY PER FCC": "0.9611", "BROADBAND USAGE": "1"}, {"ST": "VA", "COUNTY ID": "51685", "COUNTY NAME": "Manassas Park city", "BROADBAND AVAILABILITY PER FCC": "0.9843", "BROADBAND USAGE": " -   "}, {"ST": "VA", "COUNTY ID": "51690", "COUNTY NAME": "Martinsville city", "BROADBAND AVAILABILITY PER FCC": "0.9871", "BROADBAND USAGE": " -   "}, {"ST": "VA", "COUNTY ID": "51700", "COUNTY NAME": "Newport News city", "BROADBAND AVAILABILITY PER FCC": "0.9834", "BROADBAND USAGE": "0.837"}, {"ST": "VA", "COUNTY ID": "51710", "COUNTY NAME": "Norfolk city", "BROADBAND AVAILABILITY PER FCC": "0.9712", "BROADBAND USAGE": "0.791"}, {"ST": "VA", "COUNTY ID": "51720", "COUNTY NAME": "Norton city", "BROADBAND AVAILABILITY PER FCC": "0.9663", "BROADBAND USAGE": "0.409"}, {"ST": "VA", "COUNTY ID": "51730", "COUNTY NAME": "Petersburg city", "BROADBAND AVAILABILITY PER FCC": "0.9856", "BROADBAND USAGE": "0.546"}, {"ST": "VA", "COUNTY ID": "51735", "COUNTY NAME": "Poquoson city", "BROADBAND AVAILABILITY PER FCC": "0.9913", "BROADBAND USAGE": "0.776"}, {"ST": "VA", "COUNTY ID": "51740", "COUNTY NAME": "Portsmouth city", "BROADBAND AVAILABILITY PER FCC": "0.9828", "BROADBAND USAGE": "0.83"}, {"ST": "VA", "COUNTY ID": "51750", "COUNTY NAME": "Radford city", "BROADBAND AVAILABILITY PER FCC": "0.9995", "BROADBAND USAGE": "0.203"}, {"ST": "VA", "COUNTY ID": "51760", "COUNTY NAME": "Richmond city", "BROADBAND AVAILABILITY PER FCC": "0.9476", "BROADBAND USAGE": "0.82"}, {"ST": "VA", "COUNTY ID": "51770", "COUNTY NAME": "Roanoke city", "BROADBAND AVAILABILITY PER FCC": "0.9999", "BROADBAND USAGE": "0.789"}, {"ST": "VA", "COUNTY ID": "51775", "COUNTY NAME": "Salem city", "BROADBAND AVAILABILITY PER FCC": "1", "BROADBAND USAGE": "1"}, {"ST": "VA", "COUNTY ID": "51790", "COUNTY NAME": "Staunton city", "BROADBAND AVAILABILITY PER FCC": "0.9992", "BROADBAND USAGE": "0.824"}, {"ST": "VA", "COUNTY ID": "51800", "COUNTY NAME": "Suffolk city", "BROADBAND AVAILABILITY PER FCC": "0.9461", "BROADBAND USAGE": "0.816"}, {"ST": "VA", "COUNTY ID": "51810", "COUNTY NAME": "Virginia Beach city", "BROADBAND AVAILABILITY PER FCC": "0.9832", "BROADBAND USAGE": "0.843"}, {"ST": "VA", "COUNTY ID": "51820", "COUNTY NAME": "Waynesboro city", "BROADBAND AVAILABILITY PER FCC": "0.9838", "BROADBAND USAGE": "1"}, {"ST": "VA", "COUNTY ID": "51830", "COUNTY NAME": "Williamsburg city", "BROADBAND AVAILABILITY PER FCC": "0.7844", "BROADBAND USAGE": " -   "}, {"ST": "VA", "COUNTY ID": "51840", "COUNTY NAME": "Winchester city", "BROADBAND AVAILABILITY PER FCC": "0.9978", "BROADBAND USAGE": "1"}];
+        
+        let comparisonData = [];
+        let currentSort = 'name';
+
+        // Parse CSV value - handle spaces and dashes
+        function parseValue(value) {
+            if (!value || value.trim() === '-' || value.trim() === '') {
+                return null;
+            }
+            const parsed = parseFloat(value.trim());
+            return isNaN(parsed) ? null : parsed;
+        }
+
+        // Process data on load
+        function processData() {
+            // Create a map of 2020 data by county ID
+            const map2020 = {};
+            csvData2020.forEach(row => {
+                const countyId = row['COUNTY ID'];
+                if (countyId) {
+                    map2020[countyId] = {
+                        name: row['COUNTY NAME'],
+                        availability: parseValue(row['BROADBAND AVAILABILITY PER FCC'])
+                    };
+                }
+            });
+            
+            // Match counties and create comparison data
+            comparisonData = [];
+            csvData2019.forEach(row => {
+                const countyId = row['COUNTY ID'];
+                const countyName = row['COUNTY NAME'];
+                const availability2019 = parseValue(row['BROADBAND AVAILABILITY PER FCC']);
+                
+                if (countyId && map2020[countyId] && availability2019 !== null && map2020[countyId].availability !== null) {
+                    const availability2020 = map2020[countyId].availability;
+                    const change = availability2020 - availability2019;
+                    const percentChange = availability2019 > 0 ? (change / availability2019) * 100 : 0;
+                    
+                    comparisonData.push({
+                        countyId: countyId,
+                        countyName: countyName,
+                        availability2019: availability2019,
+                        availability2020: availability2020,
+                        change: change,
+                        percentChange: percentChange
+                    });
+                }
+            });
+            
+            // Calculate statistics
+            calculateStats();
+            
+            // Initial chart render
+            updateChart();
+        }
+
+        function calculateStats() {
+            if (comparisonData.length === 0) return;
+            
+            const avg2019 = comparisonData.reduce((sum, d) => sum + d.availability2019, 0) / comparisonData.length;
+            const avg2020 = comparisonData.reduce((sum, d) => sum + d.availability2020, 0) / comparisonData.length;
+            const overallChange = ((avg2020 - avg2019) / avg2019) * 100;
+            const improved = comparisonData.filter(d => d.change > 0).length;
+            
+            document.getElementById('avg2019').textContent = (avg2019 * 100).toFixed(2) + '%';
+            document.getElementById('avg2020').textContent = (avg2020 * 100).toFixed(2) + '%';
+            document.getElementById('overallChange').textContent = 
+                (overallChange >= 0 ? '+' : '') + overallChange.toFixed(2) + '%';
+            document.getElementById('improved').textContent = improved + ' / ' + comparisonData.length;
+        }
+
+        function updateChart() {
+            currentSort = document.getElementById('sortSelect').value;
+            
+            // Sort data
+            let sortedData = [...comparisonData];
+            if (currentSort === 'name') {
+                sortedData.sort((a, b) => a.countyName.localeCompare(b.countyName));
+            } else if (currentSort === 'change') {
+                sortedData.sort((a, b) => b.percentChange - a.percentChange);
+            } else if (currentSort === 'value2020') {
+                sortedData.sort((a, b) => b.availability2020 - a.availability2020);
+            }
+            
+            const counties = sortedData.map(d => d.countyName);
+            const values2019 = sortedData.map(d => d.availability2019 * 100);
+            const values2020 = sortedData.map(d => d.availability2020 * 100);
+            const percentChanges = sortedData.map(d => d.percentChange);
+            
+            const trace2019 = {
+                x: counties,
+                y: values2019,
+                name: '2019',
+                type: 'bar',
+                marker: {
+                    color: 'rgba(102, 126, 234, 0.7)',
+                    line: {
+                        color: 'rgba(102, 126, 234, 1)',
+                        width: 1
+                    }
+                },
+                text: values2019.map(v => v.toFixed(1) + '%'),
+                textposition: 'outside',
+                hovertemplate: '<b>%{x}</b><br>2019: %{y:.2f}%<extra></extra>'
+            };
+            
+            const trace2020 = {
+                x: counties,
+                y: values2020,
+                name: '2020',
+                type: 'bar',
+                marker: {
+                    color: 'rgba(118, 75, 162, 0.7)',
+                    line: {
+                        color: 'rgba(118, 75, 162, 1)',
+                        width: 1
+                    }
+                },
+                text: values2020.map(v => v.toFixed(1) + '%'),
+                textposition: 'outside',
+                hovertemplate: '<b>%{x}</b><br>2020: %{y:.2f}%<br>Change: %{customdata:.2f}%<extra></extra>',
+                customdata: percentChanges
+            };
+            
+            const layout = {
+                title: {
+                    text: 'Broadband Availability by County: 2019 vs 2020',
+                    font: { size: 24 }
+                },
+                xaxis: {
+                    title: 'County',
+                    tickangle: -45,
+                    tickfont: { size: 10 }
+                },
+                yaxis: {
+                    title: 'Broadband Availability (%)',
+                    range: [0, 105]
+                },
+                barmode: 'group',
+                hovermode: 'closest',
+                legend: {
+                    x: 0.5,
+                    y: -0.2,
+                    xanchor: 'center',
+                    orientation: 'h'
+                },
+                margin: {
+                    b: 150,
+                    t: 100
+                },
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)'
+            };
+            
+            Plotly.newPlot('chart', [trace2019, trace2020], layout, {responsive: true});
+            
+            // Update table
+            updateTable(sortedData);
+        }
+
+        function updateTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            data.forEach(d => {
+                const row = document.createElement('tr');
+                const changeClass = d.percentChange > 0 ? 'increase' : 
+                                   d.percentChange < 0 ? 'decrease' : 'no-change';
+                const changeSymbol = d.percentChange > 0 ? '↑' : 
+                                    d.percentChange < 0 ? '↓' : '→';
+                
+                row.innerHTML = `
+                    <td>${d.countyName}</td>
+                    <td>${(d.availability2019 * 100).toFixed(2)}%</td>
+                    <td>${(d.availability2020 * 100).toFixed(2)}%</td>
+                    <td>${(d.change * 100).toFixed(2)}%</td>
+                    <td class="${changeClass}">${changeSymbol} ${Math.abs(d.percentChange).toFixed(2)}%</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', processData);
+    </script>
+</body>
