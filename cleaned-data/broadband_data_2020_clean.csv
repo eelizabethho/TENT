@@ -43,7 +43,6 @@ VA,51083,Halifax County,0.7176,0.265
 VA,51085,Hanover County,0.8804,0.634
 VA,51087,Henrico County,0.9818,0.726
 VA,51089,Henry County,0.9623,0.583
-VA,51091,Highland County,0.4817,0.112
 VA,51093,Isle of Wight County,0.8583,0.633
 VA,51095,James City County,0.9464,0.764
 VA,51097,King and Queen County,0.2235,0.065
@@ -85,7 +84,6 @@ VA,51173,Smyth County,0.935,0.346
 VA,51175,Southampton County,0.4755,0.063
 VA,51177,Spotsylvania County,0.9845,0.849
 VA,51179,Stafford County,0.988,0.885
-VA,51181,Surry County,0.9182,0.055
 VA,51183,Sussex County,0.4528,0.172
 VA,51185,Tazewell County,0.9889,0.347
 VA,51187,Warren County,0.9191,0.672
@@ -100,10 +98,7 @@ VA,51530,Buena Vista city,0.9724,0.408
 VA,51540,Charlottesville city,0.9933,0.855
 VA,51550,Chesapeake city,0.9819,0.941
 VA,51570,Colonial Heights city,0.9872,1
-VA,51580,Covington city,0.9969, -   
 VA,51590,Danville city,0.9911,0.795
-VA,51595,Emporia city,0.96, -   
-VA,51600,Fairfax city,0.9985, -   
 VA,51610,Falls Church city,0.986,1
 VA,51620,Franklin city,0.9999,0.268
 VA,51630,Fredericksburg city,0.9343,0.788
@@ -111,11 +106,8 @@ VA,51640,Galax city,0.9998,0.473
 VA,51650,Hampton city,0.979,0.813
 VA,51660,Harrisonburg city,1,0.795
 VA,51670,Hopewell city,0.9831,0.599
-VA,51678,Lexington city,0.9612, -   
 VA,51680,Lynchburg city,0.9092,0.675
 VA,51683,Manassas city,0.9611,1
-VA,51685,Manassas Park city,0.9843, -   
-VA,51690,Martinsville city,0.9871, -   
 VA,51700,Newport News city,0.9834,0.837
 VA,51710,Norfolk city,0.9712,0.791
 VA,51720,Norton city,0.9663,0.409
@@ -130,5 +122,4 @@ VA,51790,Staunton city,0.9992,0.824
 VA,51800,Suffolk city,0.9461,0.816
 VA,51810,Virginia Beach city,0.9832,0.843
 VA,51820,Waynesboro city,0.9838,1
-VA,51830,Williamsburg city,0.7844, -   
 VA,51840,Winchester city,0.9978,1
